@@ -1,25 +1,44 @@
-import React, { useEffect, useState } from "react"
-import axios from "axios"
-import { useNavigate, Link } from "react-router-dom"
+import { useState } from "react";
+import {
+  Flex,
+  Heading,
+  Input,
+  Button,
+  InputGroup,
+  Stack,
+  InputLeftElement,
+  chakra,
+  Box,
+  Link,
+  Avatar,
+  FormControl,
+  FormHelperText,
+  InputRightElement,
+} from "@chakra-ui/react";
+import { FaUserAlt, FaLock } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
+const CFaUserAlt = chakra(FaUserAlt);
+const CFaLock = chakra(FaLock);
 
-function LoginForm() {
+const LoginForm = () => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [Username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
-    const history=useNavigate();
-    const [Username,setUsername]=useState('')
-    const [email,setEmail]=useState('')
-    const [password,setPassword]=useState('')
+  const handleShowClick = () => setShowPassword(!showPassword);
 
-    async function submit(e){
-        e.preventDefault();
-
-     try {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
       const response = await fetch("http://localhost:3001/User", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ Username,email, password }),
+        body: JSON.stringify({ Username, email, password }),
       });
 
       if (!response.ok) {
@@ -27,35 +46,103 @@ function LoginForm() {
         throw new Error(errorData.error || "Login failed.");
       }
 
-       history("/contact");
+      navigate("/contact");
     } catch (error) {
-     
+      console.error("Login error:", error.message);
     }
+  };
 
-    }
+  return (
+    <Flex
+      flexDirection="column"
+      width="100wh"
+      height="100vh"
+      backgroundColor="gray.200"
+      justifyContent="center"
+      alignItems="center"
+    >
+      <Stack flexDir="column" mb="2" justifyContent="center" alignItems="center">
+        <Avatar bg="teal.500" />
+        <Heading color="teal.400">Welcome</Heading>
+        <Box minW={{ base: "90%", md: "468px" }}>
+          <form onSubmit={handleSubmit}>
+            <Stack
+              spacing={4}
+              p="1rem"
+              backgroundColor="whiteAlpha.900"
+              boxShadow="md"
+            >
+              <FormControl>
+                <InputGroup>
+                  <InputLeftElement
+                    pointerEvents="none"
+                    children={<CFaUserAlt color="gray.300" />}
+                  />
+                  <Input
+                    type="text"
+                    placeholder="Username"
+                    value={Username}
+                    onChange={(e) => setUsername(e.target.value)}
+                  />
+                </InputGroup>
+              </FormControl>
+              <FormControl>
+                <InputGroup>
+                  <InputLeftElement
+                    pointerEvents="none"
+                    children={<CFaUserAlt color="gray.300" />}
+                  />
+                  <Input
+                    type="email"
+                    placeholder="Email Address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </InputGroup>
+              </FormControl>
+              <FormControl>
+                <InputGroup>
+                  <InputLeftElement
+                    pointerEvents="none"
+                    children={<CFaLock color="gray.300" />}
+                  />
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <InputRightElement width="4.5rem">
+                    <Button h="1.75rem" size="sm" onClick={handleShowClick}>
+                      {showPassword ? "Hide" : "Show"}
+                    </Button>
+                  </InputRightElement>
+                </InputGroup>
+                <FormHelperText textAlign="right">
+                  <Link>Forgot password?</Link>
+                </FormHelperText>
+              </FormControl>
+              <Button
+                borderRadius={0}
+                type="submit"
+                variant="solid"
+                colorScheme="teal"
+                width="full"
+              >
+                Login
+              </Button>
+            </Stack>
+          </form>
+        </Box>
+      </Stack>
+      <Box>
+        New to us?{" "}
+        <Link color="teal.500" href="/signup">
+          Sign Up
+        </Link>
+      </Box>
+    </Flex>
+  );
+};
 
-
-    return (
-        <div className="login">
-
-            <h1>Login</h1>
-
-        <form action="POST">
-                <input type="Username" onChange={(e) => { setUsername(e.target.value) }} placeholder="Username"  />
-                <input type="email" onChange={(e) => { setEmail(e.target.value) }} placeholder="Email"  />
-                <input type="password" onChange={(e) => { setPassword(e.target.value) }} placeholder="Password"  />
-                <input type="submit" onClick={submit} />
-
-            </form>
-
-            <br />
-            <p>OR</p>
-            <br />
-
-            <Link to="/signup">Signup Page</Link>
-
-        </div>
-    )
-}
-
-export default LoginForm
+export default LoginForm;

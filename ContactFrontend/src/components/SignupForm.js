@@ -1,6 +1,29 @@
-// SignupForm.jsx
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom"
+import {
+  Flex,
+  Heading,
+  Input,
+  Button,
+  InputGroup,
+  Stack,
+  InputLeftElement,
+  chakra,
+  Box,
+  Link,
+  Avatar,
+  FormControl,
+  FormHelperText,
+  FormErrorMessage,
+  InputRightElement,
+  Text,
+} from "@chakra-ui/react";
+import { FaUserAlt, FaLock, FaEnvelope } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+
+const CFaUserAlt = chakra(FaUserAlt);
+const CFaLock = chakra(FaLock);
+const CFaEnvelope = chakra(FaEnvelope);
+
 const SignupForm = () => {
   const [formData, setFormData] = useState({
     Username: "",
@@ -10,11 +33,16 @@ const SignupForm = () => {
 
   const [errors, setErrors] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
+
+  const handleShowClick = () => setShowPassword(!showPassword);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,7 +78,8 @@ const SignupForm = () => {
       setErrors("");
       setSuccessMessage(data.message || "Sign up successful!");
 
-      
+      // Redirect to login page after successful signup
+      setTimeout(() => navigate("/"), 2000);
     } catch (error) {
       setErrors(error.message);
       setSuccessMessage("");
@@ -58,46 +87,103 @@ const SignupForm = () => {
   };
 
   return (
-    <div>
-      <h2>Sign Up</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Username:</label>
-          <input
-            type="text"
-            name="Username"
-            value={formData.Username}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div>
-          <label>Email:</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div>
-          <label>Password:</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleInputChange}
-          />
-        </div>
-        {errors && <p style={{ color: "red" }}>{errors}</p>}
-        {successMessage && <p style={{ color: "green" }}>{successMessage}</p>}
-        <button type="submit">Sign Up</button>
-      </form>
-      <br />
-            <p>OR</p>
-            <br />
-
-            <Link to="/">Login Page</Link>
-    </div>
+    <Flex
+      flexDirection="column"
+      width="100wh"
+      height="100vh"
+      backgroundColor="gray.200"
+      justifyContent="center"
+      alignItems="center"
+    >
+      <Stack flexDir="column" mb="2" justifyContent="center" alignItems="center">
+        <Avatar bg="teal.500" />
+        <Heading color="teal.400">Sign Up</Heading>
+        <Box minW={{ base: "90%", md: "468px" }}>
+          <form onSubmit={handleSubmit}>
+            <Stack
+              spacing={4}
+              p="1rem"
+              backgroundColor="whiteAlpha.900"
+              boxShadow="md"
+            >
+              <FormControl isInvalid={errors.includes("Username")}>
+                <InputGroup>
+                  <InputLeftElement
+                    pointerEvents="none"
+                    children={<CFaUserAlt color="gray.300" />}
+                  />
+                  <Input
+                    type="text"
+                    placeholder="Username"
+                    name="Username"
+                    value={formData.Username}
+                    onChange={handleInputChange}
+                  />
+                </InputGroup>
+              </FormControl>
+              <FormControl isInvalid={errors.includes("email")}>
+                <InputGroup>
+                  <InputLeftElement
+                    pointerEvents="none"
+                    children={<CFaEnvelope color="gray.300" />}
+                  />
+                  <Input
+                    type="email"
+                    placeholder="Email Address"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                  />
+                </InputGroup>
+              </FormControl>
+              <FormControl isInvalid={errors.includes("Password")}>
+                <InputGroup>
+                  <InputLeftElement
+                    pointerEvents="none"
+                    children={<CFaLock color="gray.300" />}
+                  />
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                  />
+                  <InputRightElement width="4.5rem">
+                    <Button h="1.75rem" size="sm" onClick={handleShowClick}>
+                      {showPassword ? "Hide" : "Show"}
+                    </Button>
+                  </InputRightElement>
+                </InputGroup>
+                {errors && (
+                  <FormErrorMessage>{errors}</FormErrorMessage>
+                )}
+              </FormControl>
+              {successMessage && (
+                <Text color="green.500" textAlign="center">
+                  {successMessage}
+                </Text>
+              )}
+              <Button
+                borderRadius={0}
+                type="submit"
+                variant="solid"
+                colorScheme="teal"
+                width="full"
+              >
+                Sign Up
+              </Button>
+            </Stack>
+          </form>
+        </Box>
+      </Stack>
+      <Box>
+        Already have an account?{" "}
+        <Link color="teal.500" href="/">
+          Login
+        </Link>
+      </Box>
+    </Flex>
   );
 };
 

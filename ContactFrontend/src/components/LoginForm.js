@@ -33,7 +33,7 @@ const LoginForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:3001/login", {
+      const response = await fetch("http://localhost:3001/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -47,12 +47,12 @@ const LoginForm = () => {
       }
 
       const data = await response.json();
-      const { token } = data; // Assume the server returns a JWT token in the response.
+      const { token } = data; 
 
-      // Store the token in localStorage
+     
       localStorage.setItem("token", token);
 
-      // Navigate to the contact page
+      
       navigate("/contact");
     } catch (error) {
       console.error("Login error:", error.message);

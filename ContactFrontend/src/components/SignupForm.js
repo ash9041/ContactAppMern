@@ -62,7 +62,7 @@ const SignupForm = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:3001/User", {
+      const response = await fetch("http://localhost:3001/auth/User", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

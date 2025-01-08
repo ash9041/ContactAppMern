@@ -5,13 +5,6 @@ import {
   Flex,
   Heading,
   Input,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  useToast,
   VStack,
   Modal,
   ModalOverlay,
@@ -21,52 +14,55 @@ import {
   ModalBody,
   ModalCloseButton,
   useDisclosure,
+  useToast,
+  Select,
+  Text
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const ContactForm = () => {
-  const [contacts, setContacts] = useState([]); 
+  const [contacts, setContacts] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
   });
-  const [isEditing, setIsEditing] = useState(false); 
-  const [selectedContactId, setSelectedContactId] = useState(null); 
-
-  const { isOpen, onOpen, onClose } = useDisclosure(); 
-  const toast = useToast(); 
+  
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedContactId, setSelectedContactId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortOrder, setSortOrder] = useState("newest");
+ 
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast();
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
 
-  
   useEffect(() => {
-    const fetchContacts = async () => {
-      try {
-        const response = await axios.get("http://localhost:3001/contacts/Contact", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        console.log("Contacts fetched from API:", response.data); 
-        setContacts(response.data); 
-      } catch (err) {
-        console.error("Error fetching contacts:", err);
-        toast({
-          title: "Error",
-          description: "Failed to load contacts",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    };
-
     fetchContacts();
   }, [toast, token]);
+    
+  const fetchContacts = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/contacts/Contact", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-  
+      setContacts(response.data);
+     
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to load contacts",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -74,7 +70,6 @@ const ContactForm = () => {
     });
   };
 
-  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -91,13 +86,10 @@ const ContactForm = () => {
 
     try {
       if (isEditing) {
-        // Edit contact
         await axios.put(
           `http://localhost:3001/contacts/Contact/${selectedContactId}`,
           formData,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         toast({
           title: "Success",
@@ -107,7 +99,6 @@ const ContactForm = () => {
           isClosable: true,
         });
       } else {
-        
         await axios.post("http://localhost:3001/contacts/Contact", formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -123,9 +114,8 @@ const ContactForm = () => {
       setFormData({ name: "", email: "", phone: "" });
       setIsEditing(false);
       onClose();
-      refreshContacts();
+      fetchContacts();
     } catch (err) {
-      console.error("Error saving contact:", err);
       toast({
         title: "Error",
         description: "Failed to save contact",
@@ -136,7 +126,6 @@ const ContactForm = () => {
     }
   };
 
-  
   const handleEdit = (contact) => {
     setFormData({
       name: contact.name,
@@ -148,7 +137,6 @@ const ContactForm = () => {
     onOpen();
   };
 
-  
   const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:3001/contacts/Contact/${id}`, {
@@ -161,9 +149,8 @@ const ContactForm = () => {
         duration: 3000,
         isClosable: true,
       });
-      refreshContacts();
+      fetchContacts();
     } catch (err) {
-      console.error("Error deleting contact:", err);
       toast({
         title: "Error",
         description: "Failed to delete contact",
@@ -174,83 +161,134 @@ const ContactForm = () => {
     }
   };
 
-  
-  const refreshContacts = async () => {
-    try {
-      const response = await axios.get("http://localhost:3001/contacts/Contact", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setContacts(response.data); // Assuming response is an array of contacts
-    } catch (err) {
-      console.error("Error refreshing contacts:", err);
-    }
-  };
-
- 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    
     navigate("/");
   };
 
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSort = (e) => {
+    setSortOrder(e.target.value);
+  };
+
+  const sortedAndFilteredContacts = contacts
+    .filter((contact) =>
+      contact.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (sortOrder === "newest") {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      } else if (sortOrder === "oldest") {
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      } else if (sortOrder === "alphabetical") {
+        return a.name.localeCompare(b.name);
+      }
+      return 0;
+    });
+
   return (
     <Box bg="gray.200" minH="100vh" p={4}>
-      <Flex justify="space-between" align="center" mb={4}>
-        <Heading size="lg">Contact Manager</Heading>
-        <Button colorScheme="red" onClick={handleLogout}>
+     
+       <Flex
+      as="nav"
+      align="center"
+      justify="space-between"
+      padding="1rem"
+      bg="blue.500"
+        color="white"
+        mb={4}
+        borderRadius={10}
+    >
+     
+      <Box>
+        <Text fontSize="xl" fontWeight="bold" justifyContent="center" align="center">
+          Contact Manager
+        </Text>
+      </Box>
+
+      
+      <Flex align="center" gap="4">
+          {/* <Text fontSize="md">{Username }</Text> */}
+        <Button
+          size="sm"
+          colorScheme="red"
+          onClick={handleLogout}
+        >
           Logout
         </Button>
       </Flex>
+    </Flex>
 
-     
-      {contacts.length > 0 ? (
-  <Flex wrap="wrap" justify="left" gap={6} mt={4}>
-    {contacts.map((contact) => (
-      <Box
-        key={contact._id}
-        borderWidth="1px"
-        borderRadius="lg"
-        overflow="hidden"
-        boxShadow="md"
-        p={4}
-        w="300px"
-        bg="white"
-        _hover={{ boxShadow: "xl" }}
-      >
-        <Heading size="md" mb={2} color="teal.600">
-          {contact.name}
-        </Heading>
-        <VStack align="start" spacing={2} mb={4}>
-          <Box>
-            <strong>Email:</strong> {contact.email}
-          </Box>
-          <Box>
-            <strong>Phone:</strong> {contact.phone}
-          </Box>
-        </VStack>
-        <Flex justify="space-between">
-          <Button
-            size="sm"
-            colorScheme="blue"
-            onClick={() => handleEdit(contact)}
-          >
-            Edit
-          </Button>
-          <Button
-            size="sm"
-            colorScheme="red"
-            onClick={() => handleDelete(contact._id)}
-          >
-            Delete
-          </Button>
+      <Flex gap={4} mb={4}   >
+        <Input
+          placeholder="Search contacts"
+          value={searchTerm}
+          onChange={handleSearch}
+          backgroundColor="whiteAlpha.900"
+        />
+        <Select value={sortOrder} onChange={handleSort} backgroundColor="whiteAlpha.900">
+           <option value="" disabled>
+            Filter Options 
+         </option>
+          <option value="newest">Newest to Oldest</option>
+          <option value="oldest">Oldest to Newest</option>
+          <option value="alphabetical">Alphabetical</option>
+        </Select>
+      </Flex>
+
+      {sortedAndFilteredContacts.length > 0 ? (
+        <Flex wrap="wrap" justify="left" gap={6} mt={4}>
+          {sortedAndFilteredContacts.map((contact) => (
+            <Box
+              key={contact._id}
+              borderWidth="1px"
+              borderRadius="lg"
+              overflow="hidden"
+              boxShadow="md"
+              p={4}
+              w="300px"
+              bg="white"
+              _hover={{ boxShadow: "xl" }}
+            >
+              <Heading size="md" mb={2} color="teal.600">
+                {contact.name}
+              </Heading>
+              <VStack align="start" spacing={2} mb={4}>
+                <Box>
+                  <strong>Email:</strong> {contact.email}
+                </Box>
+                <Box>
+                  <strong>Phone:</strong> {contact.phone}
+                </Box>
+              </VStack>
+              <Flex justify="space-between">
+                <Button
+                  size="sm"
+                  colorScheme="blue"
+                  onClick={() => handleEdit(contact)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  size="sm"
+                  colorScheme="red"
+                  onClick={() => handleDelete(contact._id)}
+                >
+                  Delete
+                </Button>
+              </Flex>
+            </Box>
+          ))}
         </Flex>
-      </Box>
-    ))}
-  </Flex>
-) : (
-  <Heading size="md" color="gray.500" textAlign="center" mt={4}>
-    No contacts available. Please add one.
-  </Heading>
-)}
+      ) : (
+        <Heading size="md" color="gray.500" textAlign="center" mt={4}>
+          No contacts available. Please add one.
+        </Heading>
+      )}
 
 
       

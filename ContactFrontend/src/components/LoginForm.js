@@ -47,13 +47,14 @@ const LoginForm = () => {
       }
 
       const data = await response.json();
-      const { token } = data; 
+      const { token  } = data; 
 
      
       localStorage.setItem("token", token);
-
+     
       
-      navigate("/contact");
+    navigate("/contact");
+     
     } catch (error) {
       console.error("Login error:", error.message);
     }
